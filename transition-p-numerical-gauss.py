@@ -19,18 +19,18 @@ def f01(y,n,R,rh,l,pm1,Om,lam,sig):
     return lam**2*sig**2/2 * fp.exp(-sig**2*(y-Om)**2)\
      / fp.mpf((mp.exp(y * 2*mp.pi*l*mp.sqrt(R**2-rh**2)/rh) + 1))
 
-## Second integrand
-#def f02(y,n,R,rh,l,pm1,Om,lam,sig):
-#    K = lam**2*sig/2/fp.sqrt(2*fp.pi)
-#    a = (R**2-rh**2)*l**2/4/sig**2/rh**2
-#    b = fp.sqrt(R**2-rh**2)*Om*l/rh
-#    Zp = mp.mpf((R**2+rh**2)/(R**2-rh**2))
-#    if Zp - mp.cosh(y) > 0:
-#        return fp.mpf(K * mp.exp(-a*y**2) * mp.cos(b*y) / mp.sqrt(Zp - mp.cosh(y)))
-#    elif Zp - mp.cosh(y) < 0:
-#        return fp.mpf(-K * mp.exp(-a*y**2) * mp.sin(b*y) / mp.sqrt(mp.cosh(y) - Zp))
-#    else:
-#        return 0
+# Second integrand
+def f02(y,n,R,rh,l,pm1,Om,lam,sig):
+    K = lam**2*sig/2/fp.sqrt(2*fp.pi)
+    a = (R**2-rh**2)*l**2/4/sig**2/rh**2
+    b = fp.sqrt(R**2-rh**2)*Om*l/rh
+    Zp = mp.mpf((R**2+rh**2)/(R**2-rh**2))
+    if Zp - mp.cosh(y) > 0:
+        return fp.mpf(K * mp.exp(-a*y**2) * mp.cos(b*y) / mp.sqrt(Zp - mp.cosh(y)))
+    elif Zp - mp.cosh(y) < 0:
+        return fp.mpf(-K * mp.exp(-a*y**2) * mp.sin(b*y) / mp.sqrt(mp.cosh(y) - Zp))
+    else:
+        return 0
 
 # First integrand in the sum
 def fn1(y,n,R,rh,l,pm1,Om,lam,sig):
@@ -45,38 +45,38 @@ def fn1(y,n,R,rh,l,pm1,Om,lam,sig):
     else:
         return fp.mpf(-K * mp.exp(-a*y**2) * mp.sin(b*y) / mp.sqrt(mp.cosh(y) - Zm))
     
-## Second integrand in the sum
-#def fn2(y,n,R,rh,l,pm1,Om,lam,sig):
-#    K = lam**2*sig/2/fp.sqrt(2*fp.pi)
-#    a = (R**2-rh**2)*l**2/4/sig**2/rh**2
-#    b = fp.sqrt(R**2-rh**2)*Om*l/rh
-#    Zp = mp.mpf(rh**2/(R**2-rh**2)*(R**2/rh**2 * fp.cosh(2*fp.pi*rh/l * n) + 1))
-#    if Zp == mp.cosh(y):
-#        return 0
-#    elif Zp - fp.cosh(y) > 0:
-#        return fp.mpf(K * mp.exp(-a*y**2) * mp.cos(b*y) / mp.sqrt(Zp - mp.cosh(y)))
-#    else:
-#        return fp.mpf(-K * mp.exp(-a*y**2) * mp.sin(b*y) / mp.sqrt(mp.cosh(y) - Zp))
+# Second integrand in the sum
+def fn2(y,n,R,rh,l,pm1,Om,lam,sig):
+    K = lam**2*sig/2/fp.sqrt(2*fp.pi)
+    a = (R**2-rh**2)*l**2/4/sig**2/rh**2
+    b = fp.sqrt(R**2-rh**2)*Om*l/rh
+    Zp = mp.mpf(rh**2/(R**2-rh**2)*(R**2/rh**2 * fp.cosh(2*fp.pi*rh/l * n) + 1))
+    if Zp == mp.cosh(y):
+        return 0
+    elif Zp - fp.cosh(y) > 0:
+        return fp.mpf(K * mp.exp(-a*y**2) * mp.cos(b*y) / mp.sqrt(Zp - mp.cosh(y)))
+    else:
+        return fp.mpf(-K * mp.exp(-a*y**2) * mp.sin(b*y) / mp.sqrt(mp.cosh(y) - Zp))
     
 def P_BTZn(n,R,rh,l,pm1,Om,lam,sig):
-    #b = fp.sqrt(R**2-rh**2)/l
-    #lim = 20*sig*rh/b/l**2
+    b = fp.sqrt(R**2-rh**2)/l
+    lim = 20*sig*rh/b/l**2
     #Zp = mp.mpf(rh**2/(R**2-rh**2)*(R**2/rh**2 * fp.cosh(2*fp.pi*rh/l * n) + 1))
     #print('Zm: ',Zm, 'Zp: ',Zp)
     #print(Zm,fp.acosh(Zm))
     if pm1==-1 or pm1==1 or pm1==0:
         if n==0:
             return fp.quad(lambda x: f01(x,n,R,rh,l,pm1,Om,lam,sig),[-fp.inf,fp.inf])
-#        else:
-#            Zm = rh**2/(R**2-rh**2)*(R**2/rh**2 * fp.cosh(2*fp.pi*rh/l * n) - 1)
-#            if fp.cosh(lim) < Zm or Zm < 1:
-#                return fp.quad(lambda x: fn1(x,n,R,rh,l,pm1,Om,lam,sig)\
-#                                      - fn2(x,n,R,rh,l,pm1,Om,lam,sig),[0,lim])
-#            else:
-#                return fp.quad(lambda x: fn1(x,n,R,rh,l,pm1,Om,lam,sig)\
-#                                      - fn2(x,n,R,rh,l,pm1,Om,lam,sig),[0,fp.mpf(mp.acosh(Zm))])\
-#                     - fp.quad(lambda x: fn1(x,n,R,rh,l,pm1,Om,lam,sig)\
-#                                      - fn2(x,n,R,rh,l,pm1,Om,lam,sig),[fp.mpf(mp.acosh(Zm)),lim])
+        else:
+            Zm = rh**2/(R**2-rh**2)*(R**2/rh**2 * fp.cosh(2*fp.pi*rh/l * n) - 1)
+            if fp.cosh(lim) < Zm or Zm < 1:
+                return fp.quad(lambda x: fn1(x,n,R,rh,l,pm1,Om,lam,sig)\
+                                      - fn2(x,n,R,rh,l,pm1,Om,lam,sig),[0,lim])
+            else:
+                return fp.quad(lambda x: fn1(x,n,R,rh,l,pm1,Om,lam,sig)\
+                                      - fn2(x,n,R,rh,l,pm1,Om,lam,sig),[0,fp.mpf(mp.acosh(Zm))])\
+                     - fp.quad(lambda x: fn1(x,n,R,rh,l,pm1,Om,lam,sig)\
+                                      - fn2(x,n,R,rh,l,pm1,Om,lam,sig),[fp.mpf(mp.acosh(Zm)),lim])
     else:
         print("Please enter a value of 1, -1, or 0 for pm1.")
 
@@ -86,19 +86,22 @@ def P_BTZn(n,R,rh,l,pm1,Om,lam,sig):
 
 #time dependent
 
-def wightman_btz_n(s,n,R,rh,l,pm1,Om,lam,sig,deltaphi=0):
+def wightman_btz_n(s,n,R,rh,l,pm1,Om,lam,sig,deltaphi=0,eps=1e-4):
     if n == 0:
         Bm = (R**2 - rh**2)/rh**2
         Bp = (R**2 + rh**2)/rh**2
     else:
         Bm = R**2/rh**2 * fp.cosh(rh/l * (deltaphi - 2*fp.pi*n)) - 1
         Bp = R**2/rh**2 * fp.cosh(rh/l * (deltaphi - 2*fp.pi*n)) + 1
-    Scosh = (R**2-rh**2)/rh**2 * fp.mpf(mp.cosh(rh/l**2 * s))
+    Scosh = (R**2-rh**2)/rh**2 *mp.cosh(rh/l**2 * (s - fp.j*eps))
     
-    if Bm == Scosh or Bp == Scosh:
-        return 0
-    else:
-        return 1/(4*fp.sqrt(2)*fp.pi*l) * (-fp.j/fp.sqrt(2*Bm)/fp.mpf(mp.sinh(rh/2/l**2 * s)) - pm1/fp.sqrt(Bp - Scosh))
+#    if s == 0:
+#        return 0
+#    elif Bm == Scosh or Bp == Scosh:
+#        return 0
+#    else:
+    return 1/(4*fp.sqrt(2)*fp.pi*l) * (-fp.j/fp.sqrt(2*Bm)/\
+              mp.sinh(rh/2/l**2 * (s - fp.j*eps)) - pm1/fp.sqrt(Bp - Scosh))
 
 
 def integrand_btz_n(u,tau,n,R,rh,l,pm1,Om,lam,sig,deltaphi=0):
@@ -129,7 +132,7 @@ def integrand_btz_n(u,tau,n,R,rh,l,pm1,Om,lam,sig,deltaphi=0):
     return output
 
 def P_BTZ_n_tau(tau,n,R,rh,l,pm1,Om,lam,sig,deltaphi=0):
-    return fp.quad(lambda u: integrand_btz_n(u,tau,n,R,rh,l,pm1,Om,lam,sig,deltaphi=0), [-fp.inf,2*tau])
+    return fp.quad(lambda u: integrand_btz_n(u,tau,n,R,rh,l,pm1,Om,lam,sig,deltaphi=0), [-10*sig,2*tau])
 
 #%%############################################################################
 ###############################################################################
@@ -168,19 +171,19 @@ def PGEON_n(n,R,rh,l,pm1,Om,lam,sig):
 sig = 1             # width of Gaussian
 pm1 = 1             # zeta = +1, 0, or -1
 sep = 1             # distance between two detectors in terms of sigma
-Om = 1        # Omega
-nmax = 0            # summation limit
+Om = [1,0.3,0.1,0.03,0.01,0.003,0.001]        # Omega
+nmax = 3            # summation limit
 
 #sep *= sig
 l = 10*sig          # cosmological parameter
 lam = 1             # coupling constant
-M = 1
+M = 0.1
 rh = np.sqrt(M)*l
 dR = 1
 R = 1/2*np.exp(-dR/l) * ( rh*np.exp(2*dR/l) + rh)
 
-lowlim, uplim = -5, 5
-tau = np.linspace(lowlim,uplim,num=20)
+lowlim, uplim = -3, 3
+tau = np.linspace(lowlim,uplim,num=30)
 #tau = np.exp(np.linspace(np.log(lowlim),np.log(uplim),num=20))
 y = 0*tau
 P = P_BTZn(0,R,rh,l,pm1,Om,lam,sig)
@@ -191,11 +194,12 @@ print("i=")
 for i in range(len(tau)):
     print(i,end=', ',flush=True)
     for n in range(nmax+1):
-        y[i] += P_BTZ_n_tau(tau[i],n,R,rh,l,pm1,Om,lam,sig)
+        y[i] += fp.mpf(P_BTZ_n_tau(tau[i],n,R,rh,l,pm1,Om,lam,sig).real)
+    print(y[-1])
 
-fig = plt.figure(figsize=(9,5))
+#fig = plt.figure(figsize=(9,5))
 plt.plot(tau,y)
-plt.plot([lowlim,uplim],[P,P],linestyle=':',label=r'$\Delta P_{BTZ}$')
+plt.plot([lowlim,uplim],[P,P],linestyle=':',label=r'$P$')
 plt.legend()
 plt.xlabel(r'$\tau$')
 plt.ylabel(r'$P(\tau)$')
@@ -207,13 +211,56 @@ x=np.linspace(-5,5,num=100)
 y=[fp.erf(xi+fp.j).real for xi in x]
 plt.plot(x,y)
 
+#%%
+# Checking that code is working ?
 
+sig = 1             # width of Gaussian
+pm1 = 1             # zeta = +1, 0, or -1
+sep = 1             # distance between two detectors in terms of sigma
+Om = 0.01        # Omega
+#nmax = 3            # summation limit
+n = 0
 
+#sep *= sig
+l = 10*sig          # cosmological parameter
+lam = 1             # coupling constant
+M = 0.1
+rh = np.sqrt(M)*l
+dR = 1
+R = 1/2*np.exp(-dR/l) * ( rh*np.exp(2*dR/l) + rh)
 
+tau = 1
 
+print('Making Plot...')
+s = np.linspace(-3,3,num=80)
+integrand_s_re = []
+integrand_s_im = []
+counter = 1
+for si in s:
+    print(counter,end=', ',flush=True)
+    val = integrand_btz_n(si, tau, n, R, rh, l, pm1, Om, lam, sig)
+    integrand_s_re.append( val.real )
+    integrand_s_im.append( val.imag )
+    counter += 1
 
+plt.figure()
+plt.plot(s,integrand_s_re,label='real')
+plt.xlabel('integration variable')
+plt.ylabel('integrand')
+plt.title(r'$\tau$ = %s'%tau)
+plt.legend()
 
+plt.figure()
+plt.plot(s,integrand_s_im,label='imag')
+plt.xlabel('integration variable')
+plt.ylabel('integrand')
+plt.title(r'$\tau$ = %s'%tau)
+plt.legend()
 
+print('Computing integral...')
+print(P_BTZ_n_tau(tau[0],1,R,rh,l,pm1,Om,lam,sig))
+
+#%%
 
 ##time dependent 2
 #

@@ -402,207 +402,6 @@ def relative_diff_mpf(arr1,arr2):
 def converge_cutoff(mass,precision):
     return int(np.ceil(-np.log(precision)/3/np.pi/np.sqrt(mass)))
 
-#%%=========================================================================%%#
-#======================== COMPARE PD FOR BTZ AND GEON ========================#
-#=============================================================================#
-dirname = "P_v_dR_btzgeon/"
-if not os.path.exists(dirname):
-    os.makedirs(dirname)
-
-sig = 1             # width of Gaussian
-M = 1               # mass
-pm1 = 1             # zeta = +1, 0, or -1
-#DeltaE = 1          # Omega
-
-l = 10*sig          # cosmological parameter
-rh = np.sqrt(M)*l   # radius of horizon
-lam = 1             # coupling constant
-
-# Plot PA/lam^2 vs R from rh to 10rh
-
-dR = np.linspace(0.1, 3,num=50)
-                    # proper distance of the closest detector
-
-R = 1/2*np.exp(-dR/l) * ( rh*np.exp(2*dR/l) + rh)
-                    # Array for distance from horizon
-
-nmax = converge_cutoff(M,0.0001)            # summation limit
-print('nmax is',nmax)
-
-def get_PvdRA_for_Om(DeltaE):
-    P_btz, P_geon = [], []
-                        # Create y-axis array for BTZ and geon
-    for n in np.arange(0,nmax+1):
-        print('n = ',n,'; i = ', end='')
-        for i in range(np.size(dR)):
-            print(i,end=' ',flush=True)
-            if n == 0:
-                P_btz.append(P_BTZn(n,R[i],rh,l,pm1,DeltaE,lam,sig))
-                P_geon.append(2*PGEON_n(n,R[i],rh,l,pm1,DeltaE,lam,sig))
-            else:
-                P_btz[i] += 2*P_BTZn(n,R[i],rh,l,pm1,DeltaE,lam,sig)
-                P_geon[i] += 2*PGEON_n(n,R[i],rh,l,pm1,DeltaE,lam,sig)
-        print('')
-    
-    P_btz, P_geon = np.array(P_btz), np.array(P_geon)
-    P_geon += P_btz       # add transition probability addition from geon to BTZ
-    return P_btz, P_geon
-
-Pbtz1, Pgeon1 = get_PvdRA_for_Om(1)
-Pbtz01, Pgeon01 = get_PvdRA_for_Om(0.1)
-Pbtz001, Pgeon001 = get_PvdRA_for_Om(0.01)
-np.save(dirname+"Pbtz1.npy",Pbtz1)
-np.save(dirname+"Pbtz01.npy",Pbtz01)
-np.save(dirname+"Pbtz001.npy",Pbtz001)
-np.save(dirname+"Pgeon1.npy",Pgeon1)
-np.save(dirname+"Pgeon01.npy",Pgeon01)
-np.save(dirname+"Pgeon001.npy",Pgeon001)
-np.save(dirname+"dR",dR)
-
-# Plotting
-plt.figure()
-plt.plot(dR,Pbtz1,'b',label='BTZ, Om=1')
-plt.plot(dR,Pgeon1,'b:',label='geon, Om=1')
-plt.plot(dR,Pbtz01,'r',label='BTZ, Om=0.1')
-plt.plot(dR,Pgeon01,'r:',label='geon, Om=0.1')
-plt.plot(dR,Pbtz001,'g',label='BTZ, Om=0.01')
-plt.plot(dR,Pgeon001,'g:',label='geon, Om=0.01')
-plt.xlabel('dRA')
-plt.ylabel('P')
-#plt.ylim([0,0.5])
-plt.legend()
-plt.show()
-
-#%%===========================================================================#
-#========================== COMPARE MATRIX ELEMENT X =========================#
-#=============================================================================#
-
-sig = 1             # width of Gaussian
-M = 1               # mass
-pm1 = 1             # zeta = +1, 0, or -1
-sep = 1             # distance between two detectors in terms of sigma
-#DeltaE = 1          # Omega
-
-#sep *= sig
-l = 10*sig          # cosmological parameter
-rh = np.sqrt(M)*l   # radius of horizon
-lam = 1             # coupling constant
-
-dR = np.linspace(0.1, 3,num=100)
-                    # proper distance of the closest detector
-
-RA = 1/2*np.exp(-dR/l) * ( rh*np.exp(2*dR/l) + rh)
-                    # Array for distance from horizon
-RB = 1/2*np.exp(-sep/l) * ( (RA + np.sqrt(RA**2-rh**2))*np.exp(2*sep/l)\
-                 + RA - np.sqrt(RA**2-rh**2))
-                    # Distance of the further detector
-nmax = converge_cutoff(M,0.0001)            # summation limit
-print('nmax is',nmax)
-
-def get_XvdRA_for_Om_sep(DeltaE,sep):
-    X_btz_re, X_btz_im, X_geon = 0*RA, 0*RA, 0*RA
-                        # Create y-axis array for BTZ and geon
-    for n in np.arange(0,nmax+1):
-        print('n = ',n)
-        print('i =',end=' ')
-        for i in range(len(RA)):
-            print(i,end=' ',flush=True)
-            if n == 0:
-                fac = 1
-            else:
-                fac = 2     # when summing nonzero n's, multiply by 2
-            X_btz_re[i] += fac*XBTZ_n_re(n,RA[i],RB[i],rh,l,pm1,DeltaE,lam,sig)
-            X_btz_im[i] += fac*XBTZ_n_im(n,RA[i],RB[i],rh,l,pm1,DeltaE,lam,sig)
-            X_geon[i] += fac*XGEON_n(n,RA[i],RB[i],rh,l,pm1,DeltaE,lam,sig)
-        print('')
-    X_geon += X_btz_re       # add transition probability addition from geon to BTZ
-    X_btz = np.sqrt( X_btz_re**2 + X_btz_im**2)
-    X_geon = np.sqrt(X_geon**2 + X_btz_im**2)
-    return X_btz, X_geon
-
-Xb2, Xg2 = get_XvdRA_for_Om_sep(1,1)
-Xb3, Xg3 = get_XvdRA_for_Om_sep(0.1,1)
-Xb5, Xg5 = get_XvdRA_for_Om_sep(0.01,1)
-
-dirname = "X_v_dR_btzgeon/"
-if not os.path.exists(dirname):
-    os.makedirs(dirname)
-np.save(dirname+"Xb1",Xb2)
-np.save(dirname+"Xb01",Xb3)
-np.save(dirname+"Xb001",Xb5)
-np.save(dirname+"Xg1",Xg2)
-np.save(dirname+"Xg01",Xg3)
-np.save(dirname+"Xg001",Xg5)
-np.save(dirname+"dRA_new",dR)
-
-#plt.figure()
-#plt.plot(dR,Xb2,'b',label='BTZ, Om=1')
-#plt.plot(dR,Xg2,'b:',label='geon, Om=1')
-#plt.plot(dR,Xb3,'r',label='BTZ, Om=0.1')
-#plt.plot(dR,Xg3,'r:',label='geon, Om=0.1')
-#plt.plot(dR,Xb5,'g',label='BTZ, Om=0.01')
-#plt.plot(dR,Xg5,'g:',label='geon, Om=0.01')
-#plt.xlabel('dRA')
-#plt.ylabel('|X|')
-#plt.legend()
-#plt.title('X Element')
-#plt.show()
-
-#%%===========================================================================#
-#============================ PLOT DELTAX VS. DRA ============================#
-#=============================================================================#
-
-sig = 1             # width of Gaussian
-M = 1               # mass
-pm1 = 1             # zeta = +1, 0, or -1
-sep = 1             # distance between two detectors in terms of sigma
-#DeltaE = 1          # Omega
-
-#sep *= sig
-l = 10*sig          # cosmological parameter
-rh = np.sqrt(M)*l   # radius of horizon
-lam = 1             # coupling constant
-
-dR = np.linspace(0, 12,num=1000)[1:]
-                    # proper distance of the closest detector
-
-RA = 1/2*np.exp(-dR/l) * ( rh*np.exp(2*dR/l) + rh)
-                    # Array for distance from horizon
-RB = 1/2*np.exp(-sep/l) * ( (RA + np.sqrt(RA**2-rh**2))*np.exp(2*sep/l)\
-                 + RA - np.sqrt(RA**2-rh**2))
-                    # Distance of the further detector
-def get_DeltaX(DeltaE):
-    X_geon = 0*dR
-    nmax = 2            # summation limit
-    for n in np.arange(0,nmax+1):
-        print('n = ',n)
-        print('i =',end=' ')
-        for i in range(len(RA)):
-            if i%50 == 0:
-                print(i,end=' ',flush=True)
-            if n == 0:
-                fac = 1
-            else:
-                fac = 2     # when summing nonzero n's, multiply by 2
-            X_geon[i] += fac*XGEON_n(n,RA[i],RB[i],rh,l,pm1,DeltaE,lam,sig)
-        print('')
-    return X_geon
-
-deltaX_Om1, deltaX_Om01, deltaX_Om2 = get_DeltaX(1.), get_DeltaX(0.1), get_DeltaX(2.)
-deltaX_Om3, deltaX_Om5, deltaX_Om001 = get_DeltaX(3.), get_DeltaX(5.), get_DeltaX(0.01)
-
-dirname = "DeltaX_v_dR/"
-if not os.path.exists(dirname):
-    os.makedirs(dirname)
-
-np.save(dirname+"longDeltaX_Om1",deltaX_Om1)
-np.save(dirname+"longDeltaX_Om01",deltaX_Om01)
-np.save(dirname+"longDeltaX_Om2",deltaX_Om2)
-np.save(dirname+"longDeltaX_Om3",deltaX_Om3)
-np.save(dirname+"longDeltaX_Om5",deltaX_Om5)
-np.save(dirname+"longDeltaX_Om001",deltaX_Om001)
-np.save(dirname+'longdRA',dR)
-
 #%%===========================================================================#
 #===================== COMPARE CONCURRENCE VS. DISTANCE ======================#
 #=============================================================================#
@@ -697,6 +496,351 @@ plt.show()
 
 #print('relative difference between concurrence',\
 #      relative_diff_mpf(conc_btz,conc_geon))
+
+#%%=========================================================================%%#
+#======================== COMPARE PD FOR BTZ AND GEON ========================#
+#=============================================================================#
+dirname = "P_v_dR_btzgeon/"
+if not os.path.exists(dirname):
+    os.makedirs(dirname)
+
+sig = 1             # width of Gaussian
+M = 1               # mass
+pm1 = 1             # zeta = +1, 0, or -1
+#DeltaE = 1          # Omega
+
+l = 10*sig          # cosmological parameter
+rh = np.sqrt(M)*l   # radius of horizon
+lam = 1             # coupling constant
+
+# Plot PA/lam^2 vs R from rh to 10rh
+
+dR = np.linspace(0.1, 3,num=50)
+                    # proper distance of the closest detector
+
+R = 1/2*np.exp(-dR/l) * ( rh*np.exp(2*dR/l) + rh)
+                    # Array for distance from horizon
+
+nmax = converge_cutoff(M,0.0001)            # summation limit
+print('nmax is',nmax)
+
+def get_PvdRA_for_Om(DeltaE):
+    P_btz, P_geon = [], []
+                        # Create y-axis array for BTZ and geon
+    for n in np.arange(0,nmax+1):
+        print('n = ',n,'; i = ', end='')
+        for i in range(np.size(dR)):
+            print(i,end=' ',flush=True)
+            if n == 0:
+                P_btz.append(P_BTZn(n,R[i],rh,l,pm1,DeltaE,lam,sig))
+                P_geon.append(2*PGEON_n(n,R[i],rh,l,pm1,DeltaE,lam,sig))
+            else:
+                P_btz[i] += 2*P_BTZn(n,R[i],rh,l,pm1,DeltaE,lam,sig)
+                P_geon[i] += 2*PGEON_n(n,R[i],rh,l,pm1,DeltaE,lam,sig)
+        print('')
+    
+    P_btz, P_geon = np.array(P_btz), np.array(P_geon)
+    P_geon += P_btz       # add transition probability addition from geon to BTZ
+    return P_btz, P_geon
+
+Pbtz1, Pgeon1 = get_PvdRA_for_Om(1)
+Pbtz01, Pgeon01 = get_PvdRA_for_Om(0.1)
+Pbtz001, Pgeon001 = get_PvdRA_for_Om(0.01)
+np.save(dirname+"Pbtz1.npy",Pbtz1)
+np.save(dirname+"Pbtz01.npy",Pbtz01)
+np.save(dirname+"Pbtz001.npy",Pbtz001)
+np.save(dirname+"Pgeon1.npy",Pgeon1)
+np.save(dirname+"Pgeon01.npy",Pgeon01)
+np.save(dirname+"Pgeon001.npy",Pgeon001)
+np.save(dirname+"dR",dR)
+
+# Plotting
+plt.figure()
+plt.plot(dR,Pbtz1,'b',label='BTZ, Om=1')
+plt.plot(dR,Pgeon1,'b:',label='geon, Om=1')
+plt.plot(dR,Pbtz01,'r',label='BTZ, Om=0.1')
+plt.plot(dR,Pgeon01,'r:',label='geon, Om=0.1')
+plt.plot(dR,Pbtz001,'g',label='BTZ, Om=0.01')
+plt.plot(dR,Pgeon001,'g:',label='geon, Om=0.01')
+plt.xlabel('dRA')
+plt.ylabel('P')
+#plt.ylim([0,0.5])
+plt.legend()
+plt.show()
+
+#%%=========================================================================%%#
+#=================== COMPARE PD v M BTZ AND GEON, diff Om ====================#
+#=============================================================================#
+dirname = "P_v_M_btzgeon_diffOm/"
+if not os.path.exists(dirname):
+    os.makedirs(dirname)
+
+sig = 1             # width of Gaussian
+#M = 1               # mass
+pm1 = 1             # zeta = +1, 0, or -1
+#DeltaE = 1          # Omega
+
+l = 10*sig          # cosmological parameter
+#rh = np.sqrt(M)*l   # radius of horizon
+lam = 1             # coupling constant
+
+dR = 1
+                    # proper distance of the closest detector
+                    
+lowm, him = 1e-4, 1
+masses = np.exp( np.linspace( np.log(lowm), np.log(him), num = 30 ) )
+                    
+def get_PvM_for_Om(DeltaE):
+    
+    P_btz, P_geon = [], []
+                        # Create y-axis array for BTZ and geon
+    for i in range(np.size(masses)):
+        rh = np.sqrt(masses[i])*l
+        R = 1/2*np.exp(-dR/l) * ( rh*np.exp(2*dR/l) + rh)
+        nmax = converge_cutoff(masses[i],0.0001)            # summation limit
+        print('>>> i =',i,'nmax is',nmax,'\nn = ',end='')
+    
+        for n in np.arange(0,nmax+1):
+            print(n, end=', ', flush=True)
+            if n == 0:
+                P_btz.append(P_BTZn(n,R,rh,l,pm1,DeltaE,lam,sig))
+                P_geon.append(2*PGEON_n(n,R,rh,l,pm1,DeltaE,lam,sig))
+            else:
+                P_btz[i] += 2*P_BTZn(n,R,rh,l,pm1,DeltaE,lam,sig)
+                P_geon[i] += 2*PGEON_n(n,R,rh,l,pm1,DeltaE,lam,sig)
+        print('\n')
+    
+    P_btz, P_geon = np.array(P_btz), np.array(P_geon)
+    P_geon += P_btz       # add transition probability addition from geon to BTZ
+    return P_btz, P_geon
+
+Pbtz1, Pgeon1 = get_PvM_for_Om(1)
+Pbtz01, Pgeon01 = get_PvM_for_Om(0.1)
+Pbtz001, Pgeon001 = get_PvM_for_Om(0.01)
+np.save(dirname+"Pbtz1.npy",Pbtz1)
+np.save(dirname+"Pbtz01.npy",Pbtz01)
+np.save(dirname+"Pbtz001.npy",Pbtz001)
+np.save(dirname+"Pgeon1.npy",Pgeon1)
+np.save(dirname+"Pgeon01.npy",Pgeon01)
+np.save(dirname+"Pgeon001.npy",Pgeon001)
+np.save(dirname+"dR",dR)
+
+# Plotting
+plt.figure()
+plt.plot(masses,Pbtz1,'b',label='BTZ, Om=1')
+plt.plot(masses,Pgeon1,'b:',label='geon, Om=1')
+plt.plot(masses,Pbtz01,'r',label='BTZ, Om=0.1')
+plt.plot(masses,Pgeon01,'r:',label='geon, Om=0.1')
+plt.plot(masses,Pbtz001,'g',label='BTZ, Om=0.01')
+plt.plot(masses,Pgeon001,'g:',label='geon, Om=0.01')
+plt.xlabel('M')
+plt.ylabel('P')
+plt.semilogx()
+#plt.ylim([0,0.5])
+plt.legend()
+plt.show()
+
+#%%=========================================================================%%#
+#=================== COMPARE PD v Om BTZ AND GEON, DIFF M ====================#
+#=============================================================================#
+dirname = "P_v_Om_btzgeon_diffM/"
+if not os.path.exists(dirname):
+    os.makedirs(dirname)
+
+sig = 1             # width of Gaussian
+#M = 1               # mass
+pm1 = 1             # zeta = +1, 0, or -1
+#DeltaE = 1          # Omega
+
+l = 10*sig          # cosmological parameter
+#rh = np.sqrt(M)*l   # radius of horizon
+lam = 1             # coupling constant
+
+dR = 1
+                    # proper distance of the closest detector
+lowOm, hiOm = 1e-4, 1
+Om = np.exp( np.linspace( np.log(lowOm), np.log(hiOm), num = 30 ) )
+                    
+def get_PvOm_for_M(M):
+    rh = np.sqrt(M)*l
+    R = 1/2*np.exp(-dR/l) * ( rh*np.exp(2*dR/l) + rh)
+    nmax = converge_cutoff(M,0.0001)
+    print('nmax =',nmax)
+    P_btz, P_geon = [], []
+                        # Create y-axis array for BTZ and geon
+    for n in np.arange(0,nmax+1):
+        print('n = ',n,'; i = ', end='')
+        for i in range(np.size(Om)):
+            print(i,end=' ',flush=True)
+            if n == 0:
+                P_btz.append(P_BTZn(n,R,rh,l,pm1,Om[i],lam,sig))
+                P_geon.append(2*PGEON_n(n,R,rh,l,pm1,Om[i],lam,sig))
+            else:
+                P_btz[i] += 2*P_BTZn(n,R,rh,l,pm1,Om[i],lam,sig)
+                P_geon[i] += 2*PGEON_n(n,R,rh,l,pm1,Om[i],lam,sig)
+        print('')
+    
+    P_btz, P_geon = np.array(P_btz), np.array(P_geon)
+    P_geon += P_btz       # add transition probability addition from geon to BTZ
+    return P_btz, P_geon
+
+Pbtz1, Pgeon1 = get_PvOm_for_M(1)
+Pbtz01, Pgeon01 = get_PvOm_for_M(0.1)
+Pbtz001, Pgeon001 = get_PvOm_for_M(0.01)
+np.save(dirname+"Pbtz1.npy",Pbtz1)
+np.save(dirname+"Pbtz01.npy",Pbtz01)
+np.save(dirname+"Pbtz001.npy",Pbtz001)
+np.save(dirname+"Pgeon1.npy",Pgeon1)
+np.save(dirname+"Pgeon01.npy",Pgeon01)
+np.save(dirname+"Pgeon001.npy",Pgeon001)
+np.save(dirname+"dR",dR)
+
+# Plotting
+plt.figure()
+plt.plot(Om,Pbtz1,'b',label='BTZ, Om=1')
+plt.plot(Om,Pgeon1,'b:',label='geon, Om=1')
+plt.plot(Om,Pbtz01,'r',label='BTZ, Om=0.1')
+plt.plot(Om,Pgeon01,'r:',label='geon, Om=0.1')
+plt.plot(Om,Pbtz001,'g',label='BTZ, Om=0.01')
+plt.plot(Om,Pgeon001,'g:',label='geon, Om=0.01')
+plt.xlabel(r'$\Omega\sigma$')
+plt.ylabel('P')
+plt.semilogx()
+#plt.ylim([0,0.5])
+plt.legend()
+plt.show()
+
+#%%===========================================================================#
+#========================== COMPARE MATRIX ELEMENT X =========================#
+#=============================================================================#
+
+sig = 1             # width of Gaussian
+M = 1               # mass
+pm1 = 1             # zeta = +1, 0, or -1
+sep = 1             # distance between two detectors in terms of sigma
+#DeltaE = 1          # Omega
+
+#sep *= sig
+l = 10*sig          # cosmological parameter
+rh = np.sqrt(M)*l   # radius of horizon
+lam = 1             # coupling constant
+
+dR = np.linspace(0.1, 3,num=100)
+                    # proper distance of the closest detector
+
+RA = 1/2*np.exp(-dR/l) * ( rh*np.exp(2*dR/l) + rh)
+                    # Array for distance from horizon
+RB = 1/2*np.exp(-sep/l) * ( (RA + np.sqrt(RA**2-rh**2))*np.exp(2*sep/l)\
+                 + RA - np.sqrt(RA**2-rh**2))
+                    # Distance of the further detector
+nmax = converge_cutoff(M,0.0001)            # summation limit
+print('nmax is',nmax)
+
+def get_XvdRA_for_Om_sep(DeltaE,sep):
+    X_btz_re, X_btz_im, X_geon = 0*RA, 0*RA, 0*RA
+                        # Create y-axis array for BTZ and geon
+    for n in np.arange(0,nmax+1):
+        print('n = ',n)
+        print('i =',end=' ')
+        for i in range(len(RA)):
+            print(i,end=' ',flush=True)
+            if n == 0:
+                fac = 1
+            else:
+                fac = 2     # when summing nonzero n's, multiply by 2
+            X_btz_re[i] += fac*XBTZ_n_re(n,RA[i],RB[i],rh,l,pm1,DeltaE,lam,sig)
+            X_btz_im[i] += fac*XBTZ_n_im(n,RA[i],RB[i],rh,l,pm1,DeltaE,lam,sig)
+            X_geon[i] += fac*XGEON_n(n,RA[i],RB[i],rh,l,pm1,DeltaE,lam,sig)
+        print('')
+    X_geon += X_btz_re       # add transition probability addition from geon to BTZ
+    X_btz = np.sqrt( X_btz_re**2 + X_btz_im**2)
+    X_geon = np.sqrt(X_geon**2 + X_btz_im**2)
+    return X_btz, X_geon
+
+Xb2, Xg2 = get_XvdRA_for_Om_sep(1,1)
+Xb3, Xg3 = get_XvdRA_for_Om_sep(0.1,1)
+Xb5, Xg5 = get_XvdRA_for_Om_sep(0.01,1)
+
+dirname = "X_v_dR_btzgeon/"
+if not os.path.exists(dirname):
+    os.makedirs(dirname)
+np.save(dirname+"Xb1",Xb2)
+np.save(dirname+"Xb01",Xb3)
+np.save(dirname+"Xb001",Xb5)
+np.save(dirname+"Xg1",Xg2)
+np.save(dirname+"Xg01",Xg3)
+np.save(dirname+"Xg001",Xg5)
+np.save(dirname+"dRA_new",dR)
+
+#plt.figure()
+#plt.plot(dR,Xb2,'b',label='BTZ, Om=1')
+#plt.plot(dR,Xg2,'b:',label='geon, Om=1')
+#plt.plot(dR,Xb3,'r',label='BTZ, Om=0.1')
+#plt.plot(dR,Xg3,'r:',label='geon, Om=0.1')
+#plt.plot(dR,Xb5,'g',label='BTZ, Om=0.01')
+#plt.plot(dR,Xg5,'g:',label='geon, Om=0.01')
+#plt.xlabel('dRA')
+#plt.ylabel('|X|')
+#plt.legend()
+#plt.title('X Element')
+#plt.show()
+
+#%%===========================================================================#
+#============================ PLOT DELTAX VS. DRA ============================#
+#=============================================================================#
+
+sig = 1             # width of Gaussian
+M = 1               # mass
+pm1 = 1             # zeta = +1, 0, or -1
+sep = 1             # distance between two detectors in terms of sigma
+#DeltaE = 1          # Omega
+
+#sep *= sig
+l = 10*sig          # cosmological parameter
+rh = np.sqrt(M)*l   # radius of horizon
+lam = 1             # coupling constant
+
+dR = np.linspace(0, 40,num=1000)[1:]
+                    # proper distance of the closest detector
+
+RA = 1/2*np.exp(-dR/l) * ( rh*np.exp(2*dR/l) + rh)
+                    # Array for distance from horizon
+RB = 1/2*np.exp(-sep/l) * ( (RA + np.sqrt(RA**2-rh**2))*np.exp(2*sep/l)\
+                 + RA - np.sqrt(RA**2-rh**2))
+                    # Distance of the further detector
+def get_DeltaX(DeltaE):
+    X_geon = 0*dR
+    nmax = 2            # summation limit
+    for n in np.arange(0,nmax+1):
+        print('n = ',n)
+        print('i =',end=' ')
+        for i in range(len(RA)):
+            if i%50 == 0:
+                print(i,end=' ',flush=True)
+            if n == 0:
+                fac = 1
+            else:
+                fac = 2     # when summing nonzero n's, multiply by 2
+            X_geon[i] += fac*XGEON_n(n,RA[i],RB[i],rh,l,pm1,DeltaE,lam,sig)
+        print('')
+    return X_geon
+
+deltaX_Om1 = get_DeltaX(1.)
+#deltaX_Om1, deltaX_Om01, deltaX_Om2 = get_DeltaX(1.), get_DeltaX(0.1), get_DeltaX(2.)
+#deltaX_Om3, deltaX_Om5, deltaX_Om001 = get_DeltaX(3.), get_DeltaX(5.), get_DeltaX(0.01)
+
+dirname = "DeltaX_v_dR/"
+if not os.path.exists(dirname):
+    os.makedirs(dirname)
+
+np.save(dirname+"longerDeltaX_Om1",deltaX_Om1)
+#np.save(dirname+"longDeltaX_Om01",deltaX_Om01)
+#np.save(dirname+"longDeltaX_Om2",deltaX_Om2)
+#np.save(dirname+"longDeltaX_Om3",deltaX_Om3)
+#np.save(dirname+"longDeltaX_Om5",deltaX_Om5)
+#np.save(dirname+"longDeltaX_Om001",deltaX_Om001)
+np.save(dirname+'longerdRA',dR)
+
 
 #%%===========================================================================#
 #========== COMPARE CONCURRENCE VS. DISTANCE FOR DIFFERENT ENERGIES ==========#
@@ -1999,6 +2143,122 @@ plt.legend()
 #plt.show()
 #fig.savefig('conc-btz-geon-HE.pdf',dpi=170)
 ##plt.xticks([0.250392886,0.250392887,0.250392888])
+
+#%%===========================================================================#
+#------------------ CONC vs. COSM. CONST. FOR DIFF MASSES --------------------#
+#=============================================================================#
+sig = 1             # width of Gaussian
+pm1 = 1             # zeta = +1, 0, or -1
+sep = 1             # distance between two detectors in terms of sigma
+#DeltaE = 0.1        # Omega
+
+sep *= sig
+#l = 10*sig          # cosmological parameter
+lam = 1             # coupling constant
+
+dRA = np.linspace(0.05,10,num=99)
+
+#---------------------------------function------------------------------------#
+def get_all_vs_dRA_for_l(M,DeltaE,l):
+    l *= sig
+    rh = np.sqrt(M)*l   # radius of horizon
+    nmax = converge_cutoff(M,0.002)
+    RA = 1/2*np.exp(-dRA/l) * ( rh*np.exp(2*dRA/l) + rh)
+                        # Array for distance from horizon
+    RB = 1/2*np.exp(-sep/l) * ( (RA + np.sqrt(RA**2-rh**2))*np.exp(2*sep/l)\
+                     + RA - np.sqrt(RA**2-rh**2))
+    
+    ###
+    PA, PB, Xre, Xim = [], [], [], []
+    PAg, PBg, Xreg = [], [], []
+    
+    for n in range(nmax+1):
+        print('n =',n)
+        print(' i = ', end='')
+        for i in range(len(dRA)):
+            if i%10 == 0:
+                print(i,end=' ',flush=True)
+            if n == 0:    
+                PA.append( P_BTZn(n,RA[i],rh,l,pm1,DeltaE,lam,sig) )
+                PB.append( P_BTZn(n,RB[i],rh,l,pm1,DeltaE,lam,sig) )
+                Xre.append( XBTZ_n_re(n,RA[i],RB[i],rh,l,pm1,DeltaE,lam,sig) )
+                Xim.append( XBTZ_n_im(n,RA[i],RB[i],rh,l,pm1,DeltaE,lam,sig) )
+                
+                PAg.append( 2*PGEON_n(n,RA[i],rh,l,pm1,DeltaE,lam,sig) )
+                PBg.append( 2*PGEON_n(n,RB[i],rh,l,pm1,DeltaE,lam,sig) )
+                Xreg.append( 2*XGEON_n(n,RA[i],RB[i],rh,l,pm1,DeltaE,lam,sig) )
+            
+            else:
+                PA[i] += 2*P_BTZn(n,RA[i],rh,l,pm1,DeltaE,lam,sig) 
+                PB[i] += 2*P_BTZn(n,RB[i],rh,l,pm1,DeltaE,lam,sig) 
+                Xre[i] += 2*XBTZ_n_re(n,RA[i],RB[i],rh,l,pm1,DeltaE,lam,sig) 
+                Xim[i] += 2*XBTZ_n_im(n,RA[i],RB[i],rh,l,pm1,DeltaE,lam,sig) 
+                
+                PAg[i] += 2*PGEON_n(n,RA[i],rh,l,pm1,DeltaE,lam,sig) 
+                PBg[i] += 2*PGEON_n(n,RB[i],rh,l,pm1,DeltaE,lam,sig) 
+                Xreg[i] += 2*XGEON_n(n,RA[i],RB[i],rh,l,pm1,DeltaE,lam,sig) 
+        print('')
+    
+    papb = np.sqrt( np.multiply(np.array(PA),np.array(PB)) )
+    papbg = np.sqrt( np.multiply(np.array(PAg)+np.array(PA) , np.array(PBg)+np.array(PB) ) )
+    Xbtz = np.sqrt( np.array(Xre)**2 + np.array(Xim)**2 )
+    Xgeon = np.sqrt( (np.array(Xre) + np.array(Xreg))**2 + np.array(Xim)**2 )
+    
+    concbtz = 2 * np.maximum( 0 , Xbtz - papb )
+    concgeon = 2 * np.maximum( 0 , Xgeon - papbg )
+    return np.array(PA), np.array(PAg), Xbtz, Xgeon, concbtz, concgeon
+
+dirname = "all_v_dRA_diffl_long/"
+if not os.path.exists(dirname):
+    os.makedirs(dirname)
+    
+np.save(dirname+'dRA',dRA)
+
+energies = [1,0.1,0.01]
+masses = [1,0.1,0.01]
+ls = [100,20,10,8,7,6,5,1]
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    for DeltaE in energies:
+        print('>>>>>>> ENERGY = '+str(DeltaE))
+        
+        for M in masses:
+            print('    >>> MASS = '+str(M))
+            
+            for l in ls:
+                print('      > l = '+str(l))
+                fileend = ('_E' + str(DeltaE) + '_M' + str(M) + '_l' + str(l))\
+                          .replace('.','')
+                #names & execute
+                n1, n2, n3, n4, n5, n6 = \
+                    'pb'+fileend, 'pg'+fileend, 'xb'+fileend, 'xg'+fileend,\
+                    'cb'+fileend, 'cg'+fileend
+                execname = '= get_all_vs_dRA_for_l(M,DeltaE,l)'
+                inputname = n1+','+n2+','+n3+','+n4+','+n5+','+n6
+                exec(inputname+execname)
+                
+                exec('np.save(dirname+"'+n1+'",'+n1+')')
+                exec('np.save(dirname+"'+n2+'",'+n2+')')
+                exec('np.save(dirname+"'+n3+'",'+n3+')')
+                exec('np.save(dirname+"'+n4+'",'+n4+')')
+                exec('np.save(dirname+"'+n5+'",'+n5+')')
+                exec('np.save(dirname+"'+n6+'",'+n6+')')
+
+#fig = plt.figure(figsize=(9,5))
+#
+#plt.plot(dRA,cbtz_m008,'r',label=r'$M=0.08$, BTZ')
+#plt.plot(dRA,cbtz_m006,'orange',label=r'$M=0.06$, BTZ')
+#plt.plot(dRA,cbtz_m003,'g',label=r'$M=0.03$, BTZ')
+#plt.plot(dRA,cbtz_m001,'b',label=r'$M=0.01$, BTZ')
+#
+#plt.plot(dRA,cgeon_m008,'r',linestyle=':',label=r'$M=0.08$, Geon')
+#plt.plot(dRA,cgeon_m006,'orange',linestyle=':',label=r'$M=0.06$, Geon')
+#plt.plot(dRA,cgeon_m003,'g',linestyle=':',label=r'$M=0.03$, Geon')
+#plt.plot(dRA,cgeon_m001,'b',linestyle=':',label=r'$M=0.01$, Geon')
+#
+#plt.xlabel(r'$d(r_h,R_A)$')
+#plt.ylabel('Concurrence')
+#plt.legend()
 
 #%%===========================================================================#
 #---------------------- CHECK DELTAP DELTAX WITH LAURA -----------------------#
