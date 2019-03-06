@@ -1565,103 +1565,104 @@ plt.ylim([0,15])
 #figp.savefig('X_PA_vs_d.pdf',dpi=170)
 #
 #
-##%%             CHECK IF FUNCTIONS ARE WORKING CORRECTLY
-#
-#sig = 1             # width of Gaussian
-#M = 1               # mass
-#pm1 = 1             # zeta = +1, 0, or -1
-#sep = 1             # distance between two detectors in terms of sigma
-##dRA = 100             # proper distance of RA from the horizon
-#nmax = 0            # summation limit
-#
-#sep *= sig
-#l = 10*sig          # cosmological parameter
-#rh = np.sqrt(M)*l   # radius of horizon
-#lam = 1             # coupling constant
-#Om = 4
-#
-#def diff_X_PAPB(dRA):
-#    RA = 1/2*mp.exp(-dRA/l) * ( rh*mp.exp(2*dRA/l) + rh)
-#    RB = 1/2*mp.exp(-sep/l) * ( (RA + mp.sqrt(RA**2-rh**2))*mp.exp(2*sep/l)\
-#                     + RA - mp.sqrt(RA**2-rh**2))
-#    Xre = XBTZ_n_re(0,RA,RB,rh,l,pm1,Om,lam,sig)
-#    Xim = XBTZ_n_im(0,RA,RB,rh,l,pm1,Om,lam,sig)
-#    PA = P_BTZn(0,RA,rh,l,pm1,Om,lam,sig)
-#    PB = P_BTZn(0,RB,rh,l,pm1,Om,lam,sig)
-#    Xre_geon = XGEON_n(0,RA,RB,rh,l,pm1,Om,lam,sig)
-#    
-#    for n in range(1,nmax):
-#        Xre += 2*XBTZ_n_re(n,RA,RB,rh,l,pm1,Om,lam,sig)
-#        Xim += 2*XBTZ_n_im(n,RA,RB,rh,l,pm1,Om,lam,sig)
-#        PA += 2*P_BTZn(n,RA,rh,l,pm1,Om,lam,sig)
-#        PB += 2*P_BTZn(n,RB,rh,l,pm1,Om,lam,sig)
-#        Xre_geon += 2*XGEON_n(n,RA,RB,rh,l,pm1,Om,lam,sig)
-#    return fp.sqrt(PA*PB), fp.sqrt(Xre**2+Xim**2), fp.sqrt((Xre+Xre_geon)**2 + Xim**2)
-#
-#dRA = np.linspace(0.2,7,num=400)
-#diffxpapb = [[],[],[]]
-#print('')
-#for i in range(np.size(dRA)):
-#    print(i)
-#    x = diff_X_PAPB(dRA[i])
-#    for j in range(len(x)):
-#        diffxpapb[j].append(x[j])
-#
-#conc_btz = np.maximum(0 , np.array(diffxpapb[1]) - np.array(diffxpapb[0]))
-#conc_geon = np.maximum(0 , np.array(diffxpapb[2]) - np.array(diffxpapb[0]))
-##ddbtz = find_d_death_BTZ(0,sep,rh,l,pm1,Om,lam,sig,0.3,1e-3)
-##ddgeon = find_d_death_GEON(0,sep,rh,l,pm1,Om,lam,sig,0.3,1e-3)
+#%%             CHECK IF FUNCTIONS ARE WORKING CORRECTLY
 
-##%%===========================================================================#
-##=============== X_IM COMPARED TO root(PAPB) FOR DIFF ENERGIES ===============#
-##=============================================================================#
-#sig = 1             # width of Gaussian
-#M = 1               # mass
-#pm1 = 1             # zeta = +1, 0, or -1
-#sep = 1             # distance between two detectors in terms of sigma
-##dRA = 100             # proper distance of RA from the horizon
-#nmax = 0            # summation limit
-#
-#sep *= sig
-#l = 10*sig          # cosmological parameter
-#rh = np.sqrt(M)*l   # radius of horizon
-#
-#dRA = np.linspace(0.1,10,num=200)
-#RA = 1/2*np.exp(-dRA/l) * ( rh*np.exp(2*dRA/l) + rh)
-#RB = 1/2*np.exp(-sep/l) * ( (RA + np.sqrt(RA**2-rh**2))*np.exp(2*sep/l)\
-#                 + RA - np.sqrt(RA**2-rh**2))
-#
-#def get_xim_and_root_papb(en):
-#    xim = []
-#    rootpapb = []
-#    
-#    print('jj =',end=' ')
-#    for jj in range(np.size(dRA)):
-#        print(jj,end=' ',flush=True)
-#        rootpapb.append(np.abs(fp.sqrt(P_BTZn(0,RA[jj],rh,l,pm1,en,lam,sig)*P_BTZn(0,RB[jj],rh,l,pm1,en,lam,sig))))
-#        xim.append(np.abs(XBTZ_n_im(0,RA[jj],RB[jj],rh,l,pm1,en,lam,sig)))
-#    
-#    return np.array(xim), np.array(rootpapb)
-#
-#Om = [0.01, 0.1, 1, 3, 5, 10]
-#colors = ['b','c','r','g','orange','k']
-#rootpapbs, xim, xim_rootpapb = [], [], []
-#
-#for i in range(len(Om)):
-#    print('\n >>> Energy #',Om[i])
-#    x = get_xim_and_root_papb(Om[i])
-#    rootpapbs.append(x[1])
-#    xim.append(x[0])
-#    xim_rootpapb.append(x[0]-x[1])
-#
-##%%
-#fig = plt.figure(figsize=(9,4.5))
-#for i in range(len(Om)):
-#    plt.plot(dRA,rootpapbs[i],color=colors[i],label=r'$\sqrt{P_A P_B}$ BTZ, energy$=%s$'%(Om[i]))
-#    plt.plot(dRA,xim[i],color=colors[i],linestyle='--',label=r'$X_{im}$ BTZ, energy$=%s$'%(Om[i]))
-#plt.legend(loc=5)
+sig = 1             # width of Gaussian
+M = 1               # mass
+pm1 = 1             # zeta = +1, 0, or -1
+sep = 1             # distance between two detectors in terms of sigma
+#dRA = 100             # proper distance of RA from the horizon
+nmax = 0            # summation limit
+
+sep *= sig
+l = 10*sig          # cosmological parameter
+rh = np.sqrt(M)*l   # radius of horizon
+lam = 1             # coupling constant
+Om = 1
+
+def diff_X_PAPB(dRA):
+    RA = 1/2*mp.exp(-dRA/l) * ( rh*mp.exp(2*dRA/l) + rh)
+    RB = 1/2*mp.exp(-sep/l) * ( (RA + mp.sqrt(RA**2-rh**2))*mp.exp(2*sep/l)\
+                     + RA - mp.sqrt(RA**2-rh**2))
+    Xre = XBTZ_n_re(0,RA,RB,rh,l,pm1,Om,lam,sig)
+    Xim = XBTZ_n_im(0,RA,RB,rh,l,pm1,Om,lam,sig)
+    PA = P_BTZn(0,RA,rh,l,pm1,Om,lam,sig)
+    PB = P_BTZn(0,RB,rh,l,pm1,Om,lam,sig)
+    Xre_geon = XGEON_n(0,RA,RB,rh,l,pm1,Om,lam,sig)
+    
+    for n in range(1,nmax):
+        Xre += 2*XBTZ_n_re(n,RA,RB,rh,l,pm1,Om,lam,sig)
+        Xim += 2*XBTZ_n_im(n,RA,RB,rh,l,pm1,Om,lam,sig)
+        PA += 2*P_BTZn(n,RA,rh,l,pm1,Om,lam,sig)
+        PB += 2*P_BTZn(n,RB,rh,l,pm1,Om,lam,sig)
+        Xre_geon += 2*XGEON_n(n,RA,RB,rh,l,pm1,Om,lam,sig)
+    return fp.sqrt(PA*PB), fp.sqrt(Xre**2+Xim**2), fp.sqrt((Xre+Xre_geon)**2 + Xim**2)
+
+dRA = np.linspace(0.2,7,num=400)
+diffxpapb = [[],[],[]]
+print('')
+for i in range(np.size(dRA)):
+    print(i)
+    x = diff_X_PAPB(dRA[i])
+    for j in range(len(x)):
+        diffxpapb[j].append(x[j])
+
+conc_btz = np.maximum(0 , np.array(diffxpapb[1]) - np.array(diffxpapb[0]))
+conc_geon = np.maximum(0 , np.array(diffxpapb[2]) - np.array(diffxpapb[0]))
+#ddbtz = find_d_death_BTZ(0,sep,rh,l,pm1,Om,lam,sig,0.3,1e-3)
+#ddgeon = find_d_death_GEON(0,sep,rh,l,pm1,Om,lam,sig,0.3,1e-3)
+
+#%%===========================================================================#
+#=============== X_IM COMPARED TO root(PAPB) FOR DIFF ENERGIES ===============#
+#=============================================================================#
+sig = 1             # width of Gaussian
+M = 1               # mass
+pm1 = 1             # zeta = +1, 0, or -1
+sep = 1             # distance between two detectors in terms of sigma
+#dRA = 100             # proper distance of RA from the horizon
+nmax = 0            # summation limit
+lam = 1
+
+sep *= sig
+l = 10*sig          # cosmological parameter
+rh = np.sqrt(M)*l   # radius of horizon
+
+dRA = np.linspace(0.1,10,num=200)
+RA = 1/2*np.exp(-dRA/l) * ( rh*np.exp(2*dRA/l) + rh)
+RB = 1/2*np.exp(-sep/l) * ( (RA + np.sqrt(RA**2-rh**2))*np.exp(2*sep/l)\
+                 + RA - np.sqrt(RA**2-rh**2))
+
+def get_xim_and_root_papb(en):
+    xim = []
+    rootpapb = []
+    
+    print('jj =',end=' ')
+    for jj in range(np.size(dRA)):
+        print(jj,end=' ',flush=True)
+        rootpapb.append(np.abs(fp.sqrt(P_BTZn(0,RA[jj],rh,l,pm1,en,lam,sig)*P_BTZn(0,RB[jj],rh,l,pm1,en,lam,sig))))
+        xim.append(np.abs(XBTZ_n_im(0,RA[jj],RB[jj],rh,l,pm1,en,lam,sig)))
+    
+    return np.array(xim), np.array(rootpapb)
+
+Om = [1]
+colors = ['b','c','r','g','orange','k']
+rootpapbs, xim, xim_rootpapb = [], [], []
+
+for i in range(len(Om)):
+    print('\n >>> Energy #',Om[i])
+    x = get_xim_and_root_papb(Om[i])
+    rootpapbs.append(x[1])
+    xim.append(x[0])
+    xim_rootpapb.append(x[0]-x[1])
+
+#%%
+fig = plt.figure(figsize=(9,4.5))
+for i in range(len(Om)):
+    plt.plot(dRA,rootpapbs[i],color=colors[i],label=r'$\sqrt{P_A P_B}$ BTZ, energy$=%s$'%(Om[i]))
+    plt.plot(dRA,xim[i],color=colors[i],linestyle='--',label=r'$X_{im}$ BTZ, energy$=%s$'%(Om[i]))
+plt.legend(loc=5)
 #plt.ylim([0,0.00001])
-#plt.show()
+plt.show()
 
 ##%%===========================================================================#
 ##======================= CONC_GEON DOWN TO ZERO AGAIN? =======================#
@@ -2096,7 +2097,7 @@ np.save(dirname+"cgeon_m008_E01b",cgeon_m008)
 np.save(dirname+"cgeon_m006_E01b",cgeon_m006)
 np.save(dirname+"cgeon_m003_E01b",cgeon_m003)
 np.save(dirname+"cgeon_m001_E01b",cgeon_m001)
-np.save(dirname+"cgeon_m01_E01b",cgeon_m1)
+np.save(dirname+"cgeon_m1_E01b",cgeon_m1)
 np.save(dirname+"cgeon_m01_E01b",cgeon_m01)
 np.save(dirname+"cgeon_m0001_E01b",cgeon_m0001)
 np.save(dirname+"dRA_E01b",dRA)

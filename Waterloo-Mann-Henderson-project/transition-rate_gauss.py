@@ -89,10 +89,10 @@ def converge_cutoff(mass,precision):
 
 #%% 
 
-Om = [1, 0.1, 0.01]
+Om = [1]
 lam = 1.
 sig = 1.
-M = [0.001, 0.0001]
+M = [0.01]
 l = 10*sig
 rh = np.sqrt(np.array(M))*l
 pm1 = 1.
@@ -158,7 +158,7 @@ for En in Om:
                     tr_rate_geon[i] += 2*DeltaPdot_n(tau[i],n,R[ii],rh[ii],l,pm1,En,lam,sig)
             print('')
         tr_rate_geon += tr_rate
-        plt.figure(figsize=(9,5))
+        plt.figure(figsize=(6,4))
         plt.title('Om = '+str(En))
         plt.plot(tau,tr_rate,label='M = '+str(M[ii])+'; BTZ')
         plt.plot(tau,tr_rate_geon,label='M = '+str(M[ii])+'; Geon')
